@@ -15,6 +15,8 @@ import (
 	"github.com/google/gopacket/pcapgo"
 )
 
+const timestampFormat = "2006-01-02 15:04:05"
+
 var (
 	snapshotLen         int32 = 1024
 	promiscuous               = false
@@ -106,7 +108,7 @@ func processPacket(packet gopacket.Packet) {
 				}
 			}
 
-			timestamp := packet.Metadata().CaptureInfo.Timestamp.Format(time.RFC3339)
+			timestamp := packet.Metadata().CaptureInfo.Timestamp.Format(timestampFormat)
 
 			for _, line := range lines {
 				if strings.HasPrefix(line, "GET") || strings.HasPrefix(line, "POST") {
@@ -158,14 +160,14 @@ func printStats(timestamp time.Time) {
 	defer mu.Unlock()
 
 	if len(requests) == 0 {
-		fmt.Printf("[%s] No requests recorded.\n", timestamp.Format(time.RFC3339))
+		fmt.Printf("[%s] No requests recorded.\n", timestamp.Format(timestampFormat))
 	} else {
 		for url, count := range requests {
 			if count > 0 {
 				avgResponseTime := calculateAverageResponseTime(responseTimes[url])
-				fmt.Printf("[%s] URL: %s, Requests: %d, Average Response Time: %v\n", timestamp.Format(time.RFC3339), url, count, avgResponseTime)
+				fmt.Printf("[%s] URL: %s, Requests: %d, Average Response Time: %v\n", timestamp.Format(timestampFormat), url, count, avgResponseTime)
 			} else {
-				fmt.Printf("[%s] URL: %s, Requests: %d, No response times recorded.\n", timestamp.Format(time.RFC3339), url, count)
+				fmt.Printf("[%s] URL: %s, Requests: %d, No response times recorded.\n", timestamp.Format(timestampFormat), url, count)
 			}
 		}
 	}
