@@ -139,33 +139,33 @@ func printMetrics() {
 		ticker := time.NewTicker(3 * time.Second) // TODO: restore to 1 minute
 		defer ticker.Stop()
 
-		for range ticker.C {
-			printStats()
+		for t := range ticker.C {
+			printStats(t)
 		}
 	} else {
 		for {
 			virtualMinute := previousRequestTime.Truncate(time.Minute)
 			if !virtualMinute.Equal(currentVirtualMinute) {
 				currentVirtualMinute = virtualMinute
-				printStats()
+				printStats(virtualMinute)
 			}
 		}
 	}
 }
 
-func printStats() {
+func printStats(timestamp time.Time) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	if len(requests) == 0 {
-		fmt.Printf("[%s] No requests recorded.\n", time.Now().Format(time.RFC3339))
+		fmt.Printf("[%s] No requests recorded.\n", timestamp.Format(time.RFC3339))
 	} else {
 		for url, count := range requests {
 			if count > 0 {
 				avgResponseTime := calculateAverageResponseTime(responseTimes[url])
-				fmt.Printf("[%s] URL: %s, Requests: %d, Average Response Time: %v\n", time.Now().Format(time.RFC3339), url, count, avgResponseTime)
+				fmt.Printf("[%s] URL: %s, Requests: %d, Average Response Time: %v\n", timestamp.Format(time.RFC3339), url, count, avgResponseTime)
 			} else {
-				fmt.Printf("[%s] URL: %s, Requests: %d, No response times recorded.\n", time.Now().Format(time.RFC3339), url, count)
+				fmt.Printf("[%s] URL: %s, Requests: %d, No response times recorded.\n", timestamp.Format(time.RFC3339), url, count)
 			}
 		}
 	}
