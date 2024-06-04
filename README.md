@@ -26,7 +26,7 @@ go build
 ## Running
 
 ```sh
-sudo ./http-monitor eth0
+sudo ./http-monitor -i eth0
 ```
 
 ## Test Sites

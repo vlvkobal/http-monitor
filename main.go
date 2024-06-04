@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -15,8 +16,8 @@ import (
 )
 
 var (
-	snapshotLen   int32    = 1024
-	promiscuous   = false
+	snapshotLen   int32 = 1024
+	promiscuous         = false
 	err           error
 	timeout       = pcap.BlockForever
 	handle        *pcap.Handle
@@ -27,19 +28,21 @@ var (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatal("Usage: ./program <pcap file | network interface>")
+	interfacePtr := flag.String("i", "", "Network interface to capture packets from")
+	filePtr := flag.String("f", "", "PCAP file to parse")
+
+	flag.Parse()
+
+	if *interfacePtr == "" && *filePtr == "" {
+		log.Fatal("Usage: ./program -i <network interface> or ./program -f <pcap file>")
 	}
 
-	input := os.Args[1]
-
-	var packets chan gopacket.Packet
-	packets = make(chan gopacket.Packet)
+	packets := make(chan gopacket.Packet)
 
 	// Check if input is a file or interface
-	if _, err := os.Stat(input); os.IsNotExist(err) {
-		// Assume it's a network interface
-		handle, err = pcap.OpenLive(input, snapshotLen, promiscuous, timeout)
+	if *interfacePtr != "" {
+		// It's a network interface
+		handle, err = pcap.OpenLive(*interfacePtr, snapshotLen, promiscuous, timeout)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -50,9 +53,9 @@ func main() {
 				packets <- packet
 			}
 		}()
-	} else {
-		// Assume it's a pcap file
-		f, err := os.Open(input)
+	} else if *filePtr != "" {
+		// It's a pcap file
+		f, err := os.Open(*filePtr)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -71,7 +74,6 @@ func main() {
 				packet.Metadata().CaptureInfo = ci
 				packets <- packet
 			}
-			close(packets)
 		}()
 	}
 
@@ -141,4 +143,3 @@ func calculateAverageResponseTime(times []time.Duration) time.Duration {
 	}
 	return total / time.Duration(len(times))
 }
-
