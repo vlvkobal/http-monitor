@@ -136,7 +136,7 @@ func printMetrics() {
 	var currentVirtualMinute time.Time
 
 	if *filePtr == "" {
-		ticker := time.NewTicker(1 * time.Minute)
+		ticker := time.NewTicker(3 * time.Second) // TODO: restore to 1 minute
 		defer ticker.Stop()
 
 		for range ticker.C {
