@@ -20,8 +20,8 @@ const timestampFormat = "2006-01-02 15:04:05"
 
 var (
 	snapshotLen    int32 = 1024
-	promiscuous          = false
 	err            error
+	promiscuous    = false
 	timeout        = pcap.BlockForever
 	handle         *pcap.Handle
 	packetSource   *gopacket.PacketSource
@@ -184,6 +184,11 @@ func printMetrics() {
 					break loop
 				}
 				virtualMinute := packet.Metadata().CaptureInfo.Timestamp.Truncate(time.Minute)
+				for !currentVirtualMinute.IsZero() && currentVirtualMinute.Before(virtualMinute) {
+					// If a minute was skipped, print a message
+					currentVirtualMinute = currentVirtualMinute.Add(time.Minute)
+					printStats(currentVirtualMinute)
+				}
 				if !virtualMinute.Equal(currentVirtualMinute) {
 					currentVirtualMinute = virtualMinute
 					printStats(virtualMinute)
