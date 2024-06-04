@@ -1,0 +1,36 @@
+[2024-06-04 15:34:37] Request URL: http://example.com/
+[2024-06-04 15:34:37] GET / HTTP/1.1
+[2024-06-04 15:34:37] HTTP/1.1 200 OK
+[2024-06-04 15:34:41] Request URL: http://example.com/
+[2024-06-04 15:34:41] GET / HTTP/1.1
+[2024-06-04 15:34:41] HTTP/1.1 200 OK
+[2024-06-04 15:34:44] Request URL: http://example.org/
+[2024-06-04 15:34:44] GET / HTTP/1.1
+[2024-06-04 15:34:44] HTTP/1.1 200 OK
+[2024-06-04 15:35:00] URL: http://example.com/, Requests: 2, Average Response Time: 0s
+[2024-06-04 15:35:00] URL: http://example.org/, Requests: 1, Average Response Time: 0s
+[2024-06-04 15:36:00] No requests recorded.
+[2024-06-04 15:37:00] No requests recorded.
+[2024-06-04 15:38:00] No requests recorded.
+[2024-06-04 15:39:00] No requests recorded.
+[2024-06-04 15:39:03] Request URL: http://example.com/
+[2024-06-04 15:39:03] GET / HTTP/1.1
+[2024-06-04 15:39:03] HTTP/1.1 200 OK
+[2024-06-04 15:39:04] Request URL: http://example.com/
+[2024-06-04 15:39:04] GET / HTTP/1.1
+[2024-06-04 15:39:04] HTTP/1.1 200 OK
+[2024-06-04 15:39:05] Request URL: http://example.com/
+[2024-06-04 15:39:05] GET / HTTP/1.1
+[2024-06-04 15:39:05] HTTP/1.1 200 OK
+[2024-06-04 15:39:06] Request URL: http://example.com/
+[2024-06-04 15:39:06] GET / HTTP/1.1
+[2024-06-04 15:39:06] HTTP/1.1 200 OK
+[2024-06-04 15:39:34] Request URL: http://example.org/
+[2024-06-04 15:39:34] GET / HTTP/1.1
+[2024-06-04 15:39:34] HTTP/1.1 200 OK
+[2024-06-04 15:40:00] URL: http://example.com/, Requests: 4, Average Response Time: 0s
+[2024-06-04 15:40:00] URL: http://example.org/, Requests: 1, Average Response Time: 0s
+[2024-06-04 15:40:09] Request URL: http://example.org/
+[2024-06-04 15:40:09] GET / HTTP/1.1
+[2024-06-04 15:40:09] HTTP/1.1 200 OK
+[2024-06-04 15:41:00] URL: http://example.org/, Requests: 1, Average Response Time: 0s

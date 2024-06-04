@@ -1,0 +1,68 @@
+[2024-06-04 06:45:34] Request URL: http://example.org/
+[2024-06-04 06:45:34] GET / HTTP/1.1
+[2024-06-04 06:45:34] HTTP/1.1 200 OK
+[2024-06-04 06:45:35] Request URL: http://example.org/
+[2024-06-04 06:45:35] GET / HTTP/1.1
+[2024-06-04 06:45:36] HTTP/1.1 200 OK
+[2024-06-04 06:45:38] Request URL: http://httpbin.org/status/404
+[2024-06-04 06:45:38] GET /status/404 HTTP/1.1
+[2024-06-04 06:45:38] HTTP/1.1 404 NOT FOUND
+[2024-06-04 06:45:43] Request URL: http://example.com/
+[2024-06-04 06:45:43] GET / HTTP/1.1
+[2024-06-04 06:45:43] HTTP/1.1 200 OK
+[2024-06-04 06:45:46] Request URL: http://httpbin.org/status/200
+[2024-06-04 06:45:46] GET /status/200 HTTP/1.1
+[2024-06-04 06:45:46] HTTP/1.1 200 OK
+[2024-06-04 06:45:48] Request URL: http://httpbin.org/status/204
+[2024-06-04 06:45:48] GET /status/204 HTTP/1.1
+[2024-06-04 06:45:48] HTTP/1.1 204 NO CONTENT
+[2024-06-04 06:45:50] Request URL: http://example.com/
+[2024-06-04 06:45:50] GET / HTTP/1.1
+[2024-06-04 06:45:50] HTTP/1.1 200 OK
+[2024-06-04 06:45:53] Request URL: http://example.com/
+[2024-06-04 06:45:53] GET / HTTP/1.1
+[2024-06-04 06:45:53] HTTP/1.1 200 OK
+[2024-06-04 06:45:58] Request URL: http://example.org/
+[2024-06-04 06:45:58] GET / HTTP/1.1
+[2024-06-04 06:45:58] HTTP/1.1 200 OK
+[2024-06-04 06:46:00] URL: http://example.com/, Requests: 3, Average Response Time: 0s
+[2024-06-04 06:46:00] URL: http://example.org/, Requests: 3, Average Response Time: 0s
+[2024-06-04 06:46:00] URL: http://httpbin.org/status/200, Requests: 1, Average Response Time: 0s
+[2024-06-04 06:46:00] URL: http://httpbin.org/status/204, Requests: 1, Average Response Time: 0s
+[2024-06-04 06:46:00] URL: http://httpbin.org/status/404, Requests: 1, Average Response Time: 0s
+[2024-06-04 06:46:20] Request URL: http://httpbin.org/status/404
+[2024-06-04 06:46:20] GET /status/404 HTTP/1.1
+[2024-06-04 06:46:20] HTTP/1.1 404 NOT FOUND
+[2024-06-04 06:46:23] Request URL: http://httpbin.org/status/200
+[2024-06-04 06:46:23] GET /status/200 HTTP/1.1
+[2024-06-04 06:46:23] HTTP/1.1 200 OK
+[2024-06-04 06:46:27] Request URL: http://example.com/
+[2024-06-04 06:46:27] GET / HTTP/1.1
+[2024-06-04 06:46:27] HTTP/1.1 200 OK
+[2024-06-04 06:46:37] Request URL: http://httpbin.org/status/301
+[2024-06-04 06:46:37] GET /status/301 HTTP/1.1
+[2024-06-04 06:46:37] HTTP/1.1 301 MOVED PERMANENTLY
+[2024-06-04 06:47:00] URL: http://example.com/, Requests: 1, Average Response Time: 0s
+[2024-06-04 06:47:00] URL: http://httpbin.org/status/200, Requests: 1, Average Response Time: 0s
+[2024-06-04 06:47:00] URL: http://httpbin.org/status/301, Requests: 1, Average Response Time: 0s
+[2024-06-04 06:47:00] URL: http://httpbin.org/status/404, Requests: 1, Average Response Time: 0s
+[2024-06-04 06:47:14] Request URL: http://httpbin.org/
+[2024-06-04 06:47:14] GET / HTTP/1.1
+[2024-06-04 06:47:14] HTTP/1.1 200 OK
+[2024-06-04 06:47:20] Request URL: http://example.com/
+[2024-06-04 06:47:20] GET / HTTP/1.1
+[2024-06-04 06:47:20] HTTP/1.1 200 OK
+[2024-06-04 06:47:25] Request URL: http://example.com/
+[2024-06-04 06:47:25] GET / HTTP/1.1
+[2024-06-04 06:47:25] HTTP/1.1 200 OK
+[2024-06-04 06:47:26] Request URL: http://example.com/
+[2024-06-04 06:47:26] GET / HTTP/1.1
+[2024-06-04 06:47:26] HTTP/1.1 200 OK
+[2024-06-04 06:47:26] Request URL: http://example.com/
+[2024-06-04 06:47:26] GET / HTTP/1.1
+[2024-06-04 06:47:26] HTTP/1.1 200 OK
+[2024-06-04 06:47:28] Request URL: http://example.com/
+[2024-06-04 06:47:28] GET / HTTP/1.1
+[2024-06-04 06:47:28] HTTP/1.1 200 OK
+[2024-06-04 06:48:00] URL: http://example.com/, Requests: 5, Average Response Time: 0s
+[2024-06-04 06:48:00] URL: http://httpbin.org/, Requests: 1, Average Response Time: 0s
