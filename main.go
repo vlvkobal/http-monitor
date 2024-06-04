@@ -119,12 +119,16 @@ func printMetrics() {
 	defer ticker.Stop()
 	for range ticker.C {
 		mu.Lock()
-		for url, count := range requests {
-			if count > 0 {
-				avgResponseTime := calculateAverageResponseTime(responseTimes[url])
-				fmt.Printf("URL: %s, Requests: %d, Average Response Time: %v\n", url, count, avgResponseTime)
-			} else {
-				fmt.Printf("URL: %s, Requests: %d, No response times recorded.\n", url, count)
+		if len(requests) == 0 {
+			fmt.Printf("%s - No requests recorded.\n", time.Now().Format(time.RFC3339))
+		} else {
+			for url, count := range requests {
+				if count > 0 {
+					avgResponseTime := calculateAverageResponseTime(responseTimes[url])
+					fmt.Printf("%s - URL: %s, Requests: %d, Average Response Time: %v\n", time.Now().Format(time.RFC3339), url, count, avgResponseTime)
+				} else {
+					fmt.Printf("%s - URL: %s, Requests: %d, No response times recorded.\n", time.Now().Format(time.RFC3339), url, count)
+				}
 			}
 		}
 		requests = make(map[string]int)
