@@ -180,7 +180,7 @@ func printMetrics() {
 			os.Exit(0)
 		}()
 
-		ticker := time.NewTicker(3 * time.Second) // TODO: restore to 1 minute
+		ticker := time.NewTicker(1 * time.Minute)
 		defer ticker.Stop()
 
 		// Print stats every minute
