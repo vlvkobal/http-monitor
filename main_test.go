@@ -22,10 +22,22 @@ func TestPCAPFiles(t *testing.T) {
 			expectedFile: "testdata/test-diverse-expected.txt",
 		},
 		{
+			name:         "Test Diverse Summary",
+			pcapFile:     "testdata/test-diverse.pcap",
+			summary:      true,
+			expectedFile: "testdata/test-diverse-summary-expected.txt",
+		},
+		{
 			name:         "Test Gaps",
 			pcapFile:     "testdata/test-gaps.pcap",
 			summary:      false,
 			expectedFile: "testdata/test-gaps-expected.txt",
+		},
+		{
+			name:         "Test Gaps Summary",
+			pcapFile:     "testdata/test-gaps.pcap",
+			summary:      true,
+			expectedFile: "testdata/test-gaps-summary-expected.txt",
 		},
 	}
 
