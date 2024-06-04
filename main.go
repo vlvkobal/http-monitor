@@ -19,17 +19,17 @@ import (
 const timestampFormat = "2006-01-02 15:04:05"
 
 var (
-	snapshotLen         int32 = 1024
-	promiscuous               = false
-	err                 error
-	timeout             = pcap.BlockForever
-	handle              *pcap.Handle
-	packetSource        *gopacket.PacketSource
-	mu                  sync.Mutex
-	requests            = make(map[string]int)
-	responseTimes       = make(map[string][]time.Duration)
-	previousRequestTime time.Time
-	filePtr             *string
+	snapshotLen    int32 = 1024
+	promiscuous          = false
+	err            error
+	timeout        = pcap.BlockForever
+	handle         *pcap.Handle
+	packetSource   *gopacket.PacketSource
+	mu             sync.Mutex
+	lastPcapPacket = make(chan gopacket.Packet, 1)
+	requests       = make(map[string]int)
+	responseTimes  = make(map[string][]time.Duration)
+	filePtr        *string
 )
 
 func main() {
@@ -77,7 +77,6 @@ func main() {
 				}
 				packet := gopacket.NewPacket(data, reader.LinkType(), gopacket.Default)
 				packet.Metadata().CaptureInfo = ci
-				previousRequestTime = packet.Metadata().CaptureInfo.Timestamp
 				packets <- packet
 			}
 		}()
@@ -91,6 +90,11 @@ func main() {
 }
 
 func processPacket(packet gopacket.Packet) {
+	// Sync stats for file input
+	if *filePtr != "" {
+		lastPcapPacket <- packet
+	}
+
 	// Check for HTTP layers
 	applicationLayer := packet.ApplicationLayer()
 	if applicationLayer != nil {
@@ -155,8 +159,8 @@ func printMetrics() {
 			printStats(t)
 		}
 	} else {
-		for {
-			virtualMinute := previousRequestTime.Truncate(time.Minute)
+		for packet := range lastPcapPacket {
+			virtualMinute := packet.Metadata().CaptureInfo.Timestamp.Truncate(time.Minute)
 			if !virtualMinute.Equal(currentVirtualMinute) {
 				currentVirtualMinute = virtualMinute
 				printStats(virtualMinute)
