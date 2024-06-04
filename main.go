@@ -92,20 +92,33 @@ func processPacket(packet gopacket.Packet) {
 		if strings.Contains(payload, "HTTP/1.1") {
 			// Decode HTTP traffic
 			scanner := bufio.NewScanner(strings.NewReader(payload))
-			var url string
+			var url, host string
+			lines := []string{}
+
 			for scanner.Scan() {
 				line := scanner.Text()
+				lines = append(lines, line)
+				if strings.HasPrefix(line, "Host:") {
+					host = strings.TrimSpace(strings.TrimPrefix(line, "Host:"))
+				}
+			}
+
+			for _, line := range lines {
 				if strings.HasPrefix(line, "GET") || strings.HasPrefix(line, "POST") {
-					url = strings.Fields(line)[1]
+					if host == "" {
+						fmt.Println("No host header found")
+					}
+					url = "http://" + host + strings.Fields(line)[1] // Add protocol for clarity
 					mu.Lock()
 					requests[url]++
 					mu.Unlock()
+					fmt.Println("Request URL:", url)
 					fmt.Println(line)
 				}
 				if strings.HasPrefix(line, "HTTP/1.1") {
 					responseTime := time.Now()
 					mu.Lock()
-					responseTimes[url] = append(responseTimes[url], responseTime.Sub(time.Now()))
+					responseTimes[url] = append(responseTimes[url], responseTime.Sub(packet.Metadata().CaptureInfo.Timestamp))
 					mu.Unlock()
 					fmt.Println(line)
 				}
