@@ -39,6 +39,12 @@ Usage of ./http-monitor:
 
 ## Test
 
+### Running End to End Tests for Pcap files
+
+```sh
+go test -v
+```
+
 ### Sites
 
 - [example.com](http://example.com)
