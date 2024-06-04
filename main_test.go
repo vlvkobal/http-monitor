@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"os"
 	"os/exec"
 	"testing"
@@ -52,7 +52,7 @@ func TestPCAPFiles(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create a temporary file to capture stdout
-			tmpFile, err := ioutil.TempFile("", "stdout")
+			tmpFile, err := os.CreateTemp("", "stdout")
 			if err != nil {
 				t.Fatalf("failed to create temporary file: %s", err)
 			}
@@ -73,7 +73,7 @@ func TestPCAPFiles(t *testing.T) {
 
 			// Read captured output
 			tmpFile.Seek(0, 0) // Rewind to the beginning of the file
-			capturedOutput, err := ioutil.ReadAll(tmpFile)
+			capturedOutput, err := io.ReadAll(tmpFile)
 			if err != nil {
 				t.Fatalf("failed to read captured output: %s", err)
 			}
@@ -81,7 +81,7 @@ func TestPCAPFiles(t *testing.T) {
 			t.Logf("Captured Output:\n%s", capturedOutput)
 
 			// Read expected output
-			expectedOutput, err := ioutil.ReadFile(tt.expectedFile)
+			expectedOutput, err := os.ReadFile(tt.expectedFile)
 			if err != nil {
 				t.Fatalf("failed to read expected output file: %s", err)
 			}
