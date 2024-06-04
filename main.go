@@ -37,8 +37,8 @@ func main() {
 
 	flag.Parse()
 
-	if *interfacePtr == "" && *filePtr == "" {
-		log.Fatal("Usage: ./program -i <network interface> or ./program -f <pcap file>")
+	if (*interfacePtr == "" && *filePtr == "") || (*interfacePtr != "" && *filePtr != "") {
+		log.Fatal("Usage: ", os.Args[0], " -i <network interface> or ", os.Args[0], " -f <pcap file>")
 	}
 
 	packets := make(chan gopacket.Packet)
