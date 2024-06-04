@@ -30,6 +30,7 @@ var (
 	requests       = make(map[string]int)
 	responseTimes  = make(map[string][]time.Duration)
 	filePtr        *string
+	done           = make(chan bool)
 )
 
 func main() {
@@ -73,6 +74,7 @@ func main() {
 			for {
 				data, ci, err := reader.ReadPacketData()
 				if err != nil {
+					done <- true
 					break
 				}
 				packet := gopacket.NewPacket(data, reader.LinkType(), gopacket.Default)
@@ -92,7 +94,13 @@ func main() {
 func processPacket(packet gopacket.Packet) {
 	// Sync stats for file input
 	if *filePtr != "" {
-		lastPcapPacket <- packet
+		select {
+		case <-done:
+			// If done is closed, return without sending on lastPcapPacket
+			return
+		default:
+			lastPcapPacket <- packet
+		}
 	}
 
 	// Check for HTTP layers
@@ -161,13 +169,29 @@ func printMetrics() {
 			printStats(t)
 		}
 	} else { // It's a pcap file
-		for packet := range lastPcapPacket {
-			virtualMinute := packet.Metadata().CaptureInfo.Timestamp.Truncate(time.Minute)
-			if !virtualMinute.Equal(currentVirtualMinute) {
-				currentVirtualMinute = virtualMinute
-				printStats(virtualMinute)
+	loop:
+		for {
+			select {
+			case packet, ok := <-lastPcapPacket:
+				if !ok {
+					// If the channel is closed, exit the loop
+					break loop
+				}
+				virtualMinute := packet.Metadata().CaptureInfo.Timestamp.Truncate(time.Minute)
+				if !virtualMinute.Equal(currentVirtualMinute) {
+					currentVirtualMinute = virtualMinute
+					printStats(virtualMinute)
+				}
+			case <-done:
+				// If the done channel is closed, exit the loop
+				break loop
 			}
 		}
+
+		// Print one more set of stats when exiting the loop
+		currentVirtualMinute = currentVirtualMinute.Add(time.Minute)
+		printStats(currentVirtualMinute)
+		os.Exit(0)
 	}
 }
 
