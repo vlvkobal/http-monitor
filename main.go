@@ -16,20 +16,22 @@ import (
 )
 
 var (
-	snapshotLen   int32 = 1024
-	promiscuous         = false
-	err           error
-	timeout       = pcap.BlockForever
-	handle        *pcap.Handle
-	packetSource  *gopacket.PacketSource
-	mu            sync.Mutex
-	requests      = make(map[string]int)
-	responseTimes = make(map[string][]time.Duration)
+	snapshotLen         int32 = 1024
+	promiscuous               = false
+	err                 error
+	timeout             = pcap.BlockForever
+	handle              *pcap.Handle
+	packetSource        *gopacket.PacketSource
+	mu                  sync.Mutex
+	requests            = make(map[string]int)
+	responseTimes       = make(map[string][]time.Duration)
+	previousRequestTime time.Time
+	filePtr             *string
 )
 
 func main() {
 	interfacePtr := flag.String("i", "", "Network interface to capture packets from")
-	filePtr := flag.String("f", "", "PCAP file to parse")
+	filePtr = flag.String("f", "", "PCAP file to parse")
 
 	flag.Parse()
 
@@ -72,6 +74,7 @@ func main() {
 				}
 				packet := gopacket.NewPacket(data, reader.LinkType(), gopacket.Default)
 				packet.Metadata().CaptureInfo = ci
+				previousRequestTime = packet.Metadata().CaptureInfo.Timestamp
 				packets <- packet
 			}
 		}()
@@ -130,26 +133,44 @@ func processPacket(packet gopacket.Packet) {
 }
 
 func printMetrics() {
-	ticker := time.NewTicker(1 * time.Minute)
-	defer ticker.Stop()
-	for range ticker.C {
-		mu.Lock()
-		if len(requests) == 0 {
-			fmt.Printf("[%s] No requests recorded.\n", time.Now().Format(time.RFC3339))
-		} else {
-			for url, count := range requests {
-				if count > 0 {
-					avgResponseTime := calculateAverageResponseTime(responseTimes[url])
-					fmt.Printf("[%s] URL: %s, Requests: %d, Average Response Time: %v\n", time.Now().Format(time.RFC3339), url, count, avgResponseTime)
-				} else {
-					fmt.Printf("[%s] URL: %s, Requests: %d, No response times recorded.\n", time.Now().Format(time.RFC3339), url, count)
-				}
+	var currentVirtualMinute time.Time
+
+	if *filePtr == "" {
+		ticker := time.NewTicker(1 * time.Minute)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			printStats()
+		}
+	} else {
+		for {
+			virtualMinute := previousRequestTime.Truncate(time.Minute)
+			if !virtualMinute.Equal(currentVirtualMinute) {
+				currentVirtualMinute = virtualMinute
+				printStats()
 			}
 		}
-		requests = make(map[string]int)
-		responseTimes = make(map[string][]time.Duration)
-		mu.Unlock()
 	}
+}
+
+func printStats() {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if len(requests) == 0 {
+		fmt.Printf("[%s] No requests recorded.\n", time.Now().Format(time.RFC3339))
+	} else {
+		for url, count := range requests {
+			if count > 0 {
+				avgResponseTime := calculateAverageResponseTime(responseTimes[url])
+				fmt.Printf("[%s] URL: %s, Requests: %d, Average Response Time: %v\n", time.Now().Format(time.RFC3339), url, count, avgResponseTime)
+			} else {
+				fmt.Printf("[%s] URL: %s, Requests: %d, No response times recorded.\n", time.Now().Format(time.RFC3339), url, count)
+			}
+		}
+	}
+	requests = make(map[string]int)
+	responseTimes = make(map[string][]time.Duration)
 }
 
 func calculateAverageResponseTime(times []time.Duration) time.Duration {
