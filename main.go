@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -219,7 +220,16 @@ func printStats(timestamp time.Time) {
 	if len(requests) == 0 {
 		fmt.Printf("[%s] No requests recorded.\n", timestamp.Format(timestampFormat))
 	} else {
-		for url, count := range requests {
+		// Get the URLs and sort them
+		urls := make([]string, 0, len(requests))
+		for url := range requests {
+			urls = append(urls, url)
+		}
+		sort.Strings(urls)
+
+		// Print the stats for each URL
+		for _, url := range urls {
+			count := requests[url]
 			if count > 0 {
 				avgResponseTime := calculateAverageResponseTime(responseTimes[url])
 				fmt.Printf("[%s] URL: %s, Requests: %d, Average Response Time: %v\n", timestamp.Format(timestampFormat), url, count, avgResponseTime)
