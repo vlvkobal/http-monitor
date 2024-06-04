@@ -31,12 +31,15 @@ var (
 	requests       = make(map[string]int)
 	responseTimes  = make(map[string][]time.Duration)
 	filePtr        *string
+	summaryPtr     *bool
+	statsMessages  []string
 	done           = make(chan bool)
 )
 
 func main() {
 	interfacePtr := flag.String("i", "", "Network interface to capture packets from")
 	filePtr = flag.String("f", "", "PCAP file to parse")
+	summaryPtr = flag.Bool("s", false, "Print summary at the end")
 
 	flag.Parse()
 
@@ -164,7 +167,16 @@ func printMetrics() {
 		// Print sats on Ctrl+C
 		go func() {
 			<-sigs
-			printStats(time.Now())
+			printStats(time.Now(), *summaryPtr)
+
+			// Print one more set of stats when exiting the loop
+			if *summaryPtr {
+				fmt.Print("Summary:\n")
+				for _, message := range statsMessages {
+					fmt.Print(message)
+				}
+			}
+
 			os.Exit(0)
 		}()
 
@@ -173,7 +185,7 @@ func printMetrics() {
 
 		// Print stats every minute
 		for t := range ticker.C {
-			printStats(t)
+			printStats(t, *summaryPtr)
 		}
 	} else { // It's a pcap file
 		var firstPacket = true
@@ -194,11 +206,11 @@ func printMetrics() {
 				for !currentVirtualMinute.IsZero() && currentVirtualMinute.Before(virtualMinute) {
 					// If a minute was skipped, print a message
 					currentVirtualMinute = currentVirtualMinute.Add(time.Minute)
-					printStats(currentVirtualMinute)
+					printStats(currentVirtualMinute, *summaryPtr)
 				}
 				if !virtualMinute.Equal(currentVirtualMinute) {
 					currentVirtualMinute = virtualMinute
-					printStats(virtualMinute)
+					printStats(virtualMinute, *summaryPtr)
 				}
 			case <-done:
 				// If the done channel is closed, exit the loop
@@ -208,17 +220,31 @@ func printMetrics() {
 
 		// Print one more set of stats when exiting the loop
 		currentVirtualMinute = currentVirtualMinute.Add(time.Minute)
-		printStats(currentVirtualMinute)
+		printStats(currentVirtualMinute, *summaryPtr)
+
+		// Print one more set of stats when exiting the loop
+		if *summaryPtr {
+			fmt.Print("Summary:\n")
+			for _, message := range statsMessages {
+				fmt.Print(message)
+			}
+		}
+
 		os.Exit(0)
 	}
 }
 
-func printStats(timestamp time.Time) {
+func printStats(timestamp time.Time, storeOnly bool) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	if len(requests) == 0 {
-		fmt.Printf("[%s] No requests recorded.\n", timestamp.Format(timestampFormat))
+		message := fmt.Sprintf("[%s] No requests recorded.\n", timestamp.Format(timestampFormat))
+		if storeOnly {
+			statsMessages = append(statsMessages, message)
+		} else {
+			fmt.Print(message)
+		}
 	} else {
 		// Get the URLs and sort them
 		urls := make([]string, 0, len(requests))
@@ -232,9 +258,19 @@ func printStats(timestamp time.Time) {
 			count := requests[url]
 			if count > 0 {
 				avgResponseTime := calculateAverageResponseTime(responseTimes[url])
-				fmt.Printf("[%s] URL: %s, Requests: %d, Average Response Time: %v\n", timestamp.Format(timestampFormat), url, count, avgResponseTime)
+				message := fmt.Sprintf("[%s] URL: %s, Requests: %d, Average Response Time: %v\n", timestamp.Format(timestampFormat), url, count, avgResponseTime)
+				if storeOnly {
+					statsMessages = append(statsMessages, message)
+				} else {
+					fmt.Print(message)
+				}
 			} else {
-				fmt.Printf("[%s] URL: %s, Requests: %d, No response times recorded.\n", timestamp.Format(timestampFormat), url, count)
+				message := fmt.Sprintf("[%s] URL: %s, Requests: %d, No response times recorded.\n", timestamp.Format(timestampFormat), url, count)
+				if storeOnly {
+					statsMessages = append(statsMessages, message)
+				} else {
+					fmt.Print(message)
+				}
 			}
 		}
 	}

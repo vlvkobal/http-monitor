@@ -23,13 +23,23 @@ go mod tidy
 go build
 ```
 
-## Running
+## Usage
+
+The `http-monitor` tool can be used with the following command-line options:
 
 ```sh
-sudo ./http-monitor -i eth0
+Usage of ./http-monitor:
+  -f string
+        PCAP file to parse
+  -i string
+        Network interface to capture packets from
+  -s    
+        Print summary at the end
 ```
 
-## Test Sites
+## Test
+
+### Sites
 
 - [example.com](http://example.com)
 - [example.org](http://example.org)
