@@ -142,23 +142,25 @@ func processPacket(packet gopacket.Packet) {
 func printMetrics() {
 	var currentVirtualMinute time.Time
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, os.Interrupt)
+	if *filePtr == "" { // It's a network interface
+		sigs := make(chan os.Signal, 1)
+		signal.Notify(sigs, os.Interrupt)
 
-	go func() {
-		<-sigs
-		printStats(time.Now())
-		os.Exit(0)
-	}()
+		// Print sats on Ctrl+C
+		go func() {
+			<-sigs
+			printStats(time.Now())
+			os.Exit(0)
+		}()
 
-	if *filePtr == "" {
 		ticker := time.NewTicker(3 * time.Second) // TODO: restore to 1 minute
 		defer ticker.Stop()
 
+		// Print stats every minute
 		for t := range ticker.C {
 			printStats(t)
 		}
-	} else {
+	} else { // It's a pcap file
 		for packet := range lastPcapPacket {
 			virtualMinute := packet.Metadata().CaptureInfo.Timestamp.Truncate(time.Minute)
 			if !virtualMinute.Equal(currentVirtualMinute) {
