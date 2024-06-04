@@ -103,6 +103,8 @@ func processPacket(packet gopacket.Packet) {
 				}
 			}
 
+			timestamp := packet.Metadata().CaptureInfo.Timestamp.Format(time.RFC3339)
+
 			for _, line := range lines {
 				if strings.HasPrefix(line, "GET") || strings.HasPrefix(line, "POST") {
 					if host == "" {
@@ -112,15 +114,15 @@ func processPacket(packet gopacket.Packet) {
 					mu.Lock()
 					requests[url]++
 					mu.Unlock()
-					fmt.Println("Request URL:", url)
-					fmt.Println(line)
+					fmt.Printf("[%s] Request URL: %s\n", timestamp, url)
+					fmt.Printf("[%s] %s\n", timestamp, line)
 				}
 				if strings.HasPrefix(line, "HTTP/1.1") {
 					responseTime := time.Now()
 					mu.Lock()
 					responseTimes[url] = append(responseTimes[url], responseTime.Sub(packet.Metadata().CaptureInfo.Timestamp))
 					mu.Unlock()
-					fmt.Println(line)
+					fmt.Printf("[%s] %s\n", timestamp, line)
 				}
 			}
 		}
@@ -133,14 +135,14 @@ func printMetrics() {
 	for range ticker.C {
 		mu.Lock()
 		if len(requests) == 0 {
-			fmt.Printf("%s - No requests recorded.\n", time.Now().Format(time.RFC3339))
+			fmt.Printf("[%s] No requests recorded.\n", time.Now().Format(time.RFC3339))
 		} else {
 			for url, count := range requests {
 				if count > 0 {
 					avgResponseTime := calculateAverageResponseTime(responseTimes[url])
-					fmt.Printf("%s - URL: %s, Requests: %d, Average Response Time: %v\n", time.Now().Format(time.RFC3339), url, count, avgResponseTime)
+					fmt.Printf("[%s] URL: %s, Requests: %d, Average Response Time: %v\n", time.Now().Format(time.RFC3339), url, count, avgResponseTime)
 				} else {
-					fmt.Printf("%s - URL: %s, Requests: %d, No response times recorded.\n", time.Now().Format(time.RFC3339), url, count)
+					fmt.Printf("[%s] URL: %s, Requests: %d, No response times recorded.\n", time.Now().Format(time.RFC3339), url, count)
 				}
 			}
 		}
