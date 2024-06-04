@@ -124,18 +124,23 @@ func processPacket(packet gopacket.Packet) {
 			timestamp := packet.Metadata().CaptureInfo.Timestamp.Format(timestampFormat)
 
 			for _, line := range lines {
-				if strings.HasPrefix(line, "GET") || strings.HasPrefix(line, "POST") {
+				fields := strings.Fields(line)
+				if len(fields) == 0 {
+					continue
+				}
+
+				switch fields[0] {
+				case "GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH":
 					if host == "" {
 						fmt.Println("No host header found")
 					}
-					url = "http://" + host + strings.Fields(line)[1] // Add protocol for clarity
+					url = "http://" + host + fields[1] // Add protocol for clarity
 					mu.Lock()
 					requests[url]++
 					mu.Unlock()
 					fmt.Printf("[%s] Request URL: %s\n", timestamp, url)
 					fmt.Printf("[%s] %s\n", timestamp, line)
-				}
-				if strings.HasPrefix(line, "HTTP/1.1") {
+				case "HTTP/1.1":
 					responseTime := time.Now()
 					mu.Lock()
 					responseTimes[url] = append(responseTimes[url], responseTime.Sub(packet.Metadata().CaptureInfo.Timestamp))
