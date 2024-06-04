@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"strings"
 	"sync"
 	"time"
@@ -136,6 +137,15 @@ func processPacket(packet gopacket.Packet) {
 
 func printMetrics() {
 	var currentVirtualMinute time.Time
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, os.Interrupt)
+
+	go func() {
+		<-sigs
+		printStats(time.Now())
+		os.Exit(0)
+	}()
 
 	if *filePtr == "" {
 		ticker := time.NewTicker(3 * time.Second) // TODO: restore to 1 minute
