@@ -175,6 +175,7 @@ func printMetrics() {
 			printStats(t)
 		}
 	} else { // It's a pcap file
+		var firstPacket = true
 	loop:
 		for {
 			select {
@@ -184,6 +185,11 @@ func printMetrics() {
 					break loop
 				}
 				virtualMinute := packet.Metadata().CaptureInfo.Timestamp.Truncate(time.Minute)
+				if firstPacket {
+					currentVirtualMinute = virtualMinute
+					firstPacket = false
+					continue
+				}
 				for !currentVirtualMinute.IsZero() && currentVirtualMinute.Before(virtualMinute) {
 					// If a minute was skipped, print a message
 					currentVirtualMinute = currentVirtualMinute.Add(time.Minute)
