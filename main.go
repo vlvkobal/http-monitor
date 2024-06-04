@@ -74,6 +74,7 @@ func main() {
 			for {
 				data, ci, err := reader.ReadPacketData()
 				if err != nil {
+					close(lastPcapPacket)
 					done <- true
 					break
 				}
