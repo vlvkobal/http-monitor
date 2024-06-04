@@ -164,7 +164,7 @@ func printMetrics() {
 		sigs := make(chan os.Signal, 1)
 		signal.Notify(sigs, os.Interrupt)
 
-		// Print sats on Ctrl+C
+		// Print stats on Ctrl+C
 		go func() {
 			<-sigs
 			printStats(time.Now(), *summaryPtr)
