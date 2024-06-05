@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -54,7 +55,7 @@ func main() {
 		// It's a network interface
 		handle, err = pcap.OpenLive(*interfacePtr, snapshotLen, promiscuous, timeout)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Failed to open interface %s: %v", *interfacePtr, err)
 		}
 		defer handle.Close()
 		packetSource = gopacket.NewPacketSource(handle, handle.LinkType())
@@ -67,20 +68,24 @@ func main() {
 		// It's a pcap file
 		f, err := os.Open(*filePtr)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Failed to open pcap file %s: %v", *filePtr, err)
 		}
 		defer f.Close()
 		reader, err := pcapgo.NewReader(f)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Failed to read pcap file %s: %v", *filePtr, err)
 		}
 		go func() {
 			for {
 				data, ci, err := reader.ReadPacketData()
 				if err != nil {
-					close(lastPcapPacket)
-					done <- true
-					break
+					if err == io.EOF {
+						close(lastPcapPacket)
+						done <- true
+						break
+					}
+					log.Printf("Error reading packet data from %s: %v\n", *filePtr, err)
+					continue
 				}
 				packet := gopacket.NewPacket(data, reader.LinkType(), gopacket.Default)
 				packet.Metadata().CaptureInfo = ci
