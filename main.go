@@ -49,7 +49,6 @@ type PacketKey struct {
 	DstIP   gopacket.Endpoint
 	SrcPort layers.TCPPort
 	DstPort layers.TCPPort
-	Seq     uint32
 }
 
 type tcpConnection struct {
@@ -199,7 +198,6 @@ func processPacket(packet gopacket.Packet) {
 					DstIP:   dstIP,
 					SrcPort: tcp.SrcPort,
 					DstPort: tcp.DstPort,
-					Seq:     tcp.Seq,
 				}
 				mu.Lock()
 				requests[url]++
@@ -219,7 +217,6 @@ func processPacket(packet gopacket.Packet) {
 					DstIP:   srcIP,
 					SrcPort: tcp.DstPort,
 					DstPort: tcp.SrcPort,
-					Seq:     tcp.Ack - 1,
 				}
 				mu.Lock()
 				if conn, exists := tcpMap[key]; exists {
