@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -117,46 +118,66 @@ func processPacket(packet gopacket.Packet) {
 	applicationLayer := packet.ApplicationLayer()
 	if applicationLayer != nil {
 		payload := string(applicationLayer.Payload())
-		if strings.Contains(payload, "HTTP/1.1") {
-			// Decode HTTP traffic
-			scanner := bufio.NewScanner(strings.NewReader(payload))
-			var url, host string
-			lines := []string{}
 
-			for scanner.Scan() {
-				line := scanner.Text()
-				lines = append(lines, line)
-				if strings.HasPrefix(line, "Host:") {
-					host = strings.TrimSpace(strings.TrimPrefix(line, "Host:"))
-				}
+		// Skip packets that do not contain "HTTP/1.1"
+		if !strings.Contains(payload, "HTTP/1.1") {
+			return
+		}
+
+		// Decode HTTP traffic
+		scanner := bufio.NewScanner(strings.NewReader(payload))
+		var url, host string
+		lines := []string{}
+
+		for scanner.Scan() {
+			line := scanner.Text()
+			lines = append(lines, line)
+			if strings.HasPrefix(line, "Host:") {
+				host = strings.TrimSpace(strings.TrimPrefix(line, "Host:"))
+			}
+		}
+
+		timestamp := packet.Metadata().CaptureInfo.Timestamp.Format(timestampFormat)
+
+		for _, line := range lines {
+			fields := strings.Fields(line)
+			if len(fields) == 0 {
+				continue
 			}
 
-			timestamp := packet.Metadata().CaptureInfo.Timestamp.Format(timestampFormat)
-
-			for _, line := range lines {
-				fields := strings.Fields(line)
-				if len(fields) == 0 {
-					continue
+			switch fields[0] {
+			case "GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH":
+				// Check if Host header is present
+				if host == "" {
+					fmt.Println("No host header found")
+					return
 				}
-
-				switch fields[0] {
-				case "GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH":
-					if host == "" {
-						fmt.Println("No host header found")
-					}
-					url = "http://" + host + fields[1] // Add protocol for clarity
-					mu.Lock()
-					requests[url]++
-					mu.Unlock()
-					fmt.Printf("[%s] Request URL: %s\n", timestamp, url)
-					fmt.Printf("[%s] %s\n", timestamp, line)
-				case "HTTP/1.1":
-					responseTime := time.Now()
-					mu.Lock()
-					responseTimes[url] = append(responseTimes[url], responseTime.Sub(packet.Metadata().CaptureInfo.Timestamp))
-					mu.Unlock()
-					fmt.Printf("[%s] %s\n", timestamp, line)
+				// Check if there are at least two fields
+				if len(fields) < 2 {
+					fmt.Println("Invalid HTTP request line")
+					return
 				}
+				url = "http://" + host + fields[1] // Add protocol for clarity
+				mu.Lock()
+				requests[url]++
+				mu.Unlock()
+				fmt.Printf("[%s] Request URL: %s\n", timestamp, url)
+				fmt.Printf("[%s] %s\n", timestamp, line)
+			case "HTTP/1.1":
+				// Check if it's a valid HTTP/1.1 response status line
+				statusCodeRe := regexp.MustCompile(`^[1-5][0-9]{2}$`)
+				if len(fields) < 2 || !statusCodeRe.MatchString(fields[1]) {
+					fmt.Println("Invalid HTTP response status line")
+					return
+				}
+				responseTime := time.Now()
+				mu.Lock()
+				responseTimes[url] = append(responseTimes[url], responseTime.Sub(packet.Metadata().CaptureInfo.Timestamp))
+				mu.Unlock()
+				fmt.Printf("[%s] %s\n", timestamp, line)
+			default:
+				// Skip any non-HTTP/1.1 lines that are not recognized
+				continue
 			}
 		}
 	}
