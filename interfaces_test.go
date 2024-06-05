@@ -78,12 +78,6 @@ func TestInterfaces(t *testing.T) {
 			}
 			defer os.Remove(tmpFile.Name())
 
-			// Run tcpreplay to replay the pcap file
-			tcpreplayCmd := exec.Command("sudo", "tcpreplay", "--intf1=veth0", tt.pcapFile)
-			if err := tcpreplayCmd.Start(); err != nil {
-				t.Fatalf("failed to start tcpreplay: %v", err)
-			}
-
 			// Run the program and capture the output
 			cmd := exec.Command("sudo", exePath, "-i", "veth1")
 			if tt.summary {
@@ -95,6 +89,15 @@ func TestInterfaces(t *testing.T) {
 			// Start the program in a non-blocking manner
 			if err := cmd.Start(); err != nil {
 				t.Fatalf("cmd.Start() failed with %s\nStderr: %s", err, cmd.Stderr.(*bytes.Buffer).String())
+			}
+
+			// Give the program some time to initialize
+			time.Sleep(1 * time.Second)
+
+			// Run tcpreplay to replay the pcap file
+			tcpreplayCmd := exec.Command("sudo", "tcpreplay", "--intf1=veth0", tt.pcapFile)
+			if err := tcpreplayCmd.Start(); err != nil {
+				t.Fatalf("failed to start tcpreplay: %v", err)
 			}
 
 			// Give tcpreplay some time to send packets
