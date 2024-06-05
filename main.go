@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	"github.com/google/gopacket/pcapgo"
 )
@@ -32,11 +33,17 @@ var (
 	lastPcapPacket = make(chan gopacket.Packet, 1)
 	requests       = make(map[string]int)
 	responseTimes  = make(map[string][]time.Duration)
+	tcpMap         = make(map[string]tcpConnection)
 	filePtr        *string
 	summaryPtr     *bool
 	statsMessages  []string
 	done           = make(chan bool)
 )
+
+type tcpConnection struct {
+	url       string
+	timestamp time.Time
+}
 
 func main() {
 	interfacePtr := flag.String("i", "", "Network interface to capture packets from")
@@ -114,6 +121,21 @@ func processPacket(packet gopacket.Packet) {
 		}
 	}
 
+	// Check for TCP layer
+	tcpLayer := packet.Layer(layers.LayerTypeTCP)
+	if tcpLayer == nil {
+		return
+	}
+	tcp, _ := tcpLayer.(*layers.TCP)
+
+	// Check for IP layer
+	ipLayer := packet.NetworkLayer()
+	if ipLayer == nil {
+		return
+	}
+
+	srcIP, dstIP := ipLayer.NetworkFlow().Endpoints()
+
 	// Check for HTTP layers
 	applicationLayer := packet.ApplicationLayer()
 	if applicationLayer != nil {
@@ -137,7 +159,7 @@ func processPacket(packet gopacket.Packet) {
 			}
 		}
 
-		timestamp := packet.Metadata().CaptureInfo.Timestamp.Format(timestampFormat)
+		timestamp := packet.Metadata().CaptureInfo.Timestamp
 
 		for _, line := range lines {
 			fields := strings.Fields(line)
@@ -158,11 +180,13 @@ func processPacket(packet gopacket.Packet) {
 					return
 				}
 				url = "http://" + host + fields[1] // Add protocol for clarity
+				key := fmt.Sprintf("%s:%s:%d:%d:%d", srcIP, dstIP, tcp.SrcPort, tcp.DstPort, tcp.Seq)
 				mu.Lock()
 				requests[url]++
+				tcpMap[key] = tcpConnection{url, timestamp}
 				mu.Unlock()
-				fmt.Printf("[%s] Request URL: %s\n", timestamp, url)
-				fmt.Printf("[%s] %s\n", timestamp, line)
+				fmt.Printf("[%s] Request URL: %s\n", timestamp.Format(timestampFormat), url)
+				fmt.Printf("[%s] %s\n", timestamp.Format(timestampFormat), line)
 			case "HTTP/1.1":
 				// Check if it's a valid HTTP/1.1 response status line
 				statusCodeRe := regexp.MustCompile(`^[1-5][0-9]{2}$`)
@@ -170,11 +194,14 @@ func processPacket(packet gopacket.Packet) {
 					fmt.Println("Invalid HTTP response status line")
 					return
 				}
-				responseTime := time.Now()
+				key := fmt.Sprintf("%s:%s:%d:%d:%d", dstIP, srcIP, tcp.DstPort, tcp.SrcPort, tcp.Ack-1)
 				mu.Lock()
-				responseTimes[url] = append(responseTimes[url], responseTime.Sub(packet.Metadata().CaptureInfo.Timestamp))
+				if conn, exists := tcpMap[key]; exists {
+					responseTimes[conn.url] = append(responseTimes[conn.url], timestamp.Sub(conn.timestamp))
+					delete(tcpMap, key)
+				}
 				mu.Unlock()
-				fmt.Printf("[%s] %s\n", timestamp, line)
+				fmt.Printf("[%s] %s\n", timestamp.Format(timestampFormat), line)
 			default:
 				// Skip any non-HTTP/1.1 lines that are not recognized
 				continue
