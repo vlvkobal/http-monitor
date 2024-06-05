@@ -20,7 +20,11 @@ import (
 	"github.com/google/gopacket/pcapgo"
 )
 
-const timestampFormat = "2006-01-02 15:04:05"
+const (
+	timestampFormat   = "2006-01-02 15:04:05"
+	connectionTimeout = 10 * time.Minute
+	cleanupFrequency  = 5 * time.Minute
+)
 
 var (
 	snapshotLen    int32 = 1024
@@ -111,6 +115,8 @@ func main() {
 	}
 
 	go printMetrics()
+
+	go cleanupStaleConnections()
 
 	for packet := range packets {
 		processPacket(packet)
@@ -360,4 +366,20 @@ func calculateAverageResponseTime(times []time.Duration) time.Duration {
 		total += t
 	}
 	return total / time.Duration(len(times))
+}
+
+func cleanupStaleConnections() {
+	ticker := time.NewTicker(cleanupFrequency)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		mu.Lock()
+		defer mu.Unlock()
+
+		for key, conn := range tcpMap {
+			if time.Since(conn.timestamp) > connectionTimeout {
+				delete(tcpMap, key)
+			}
+		}
+	}
 }
