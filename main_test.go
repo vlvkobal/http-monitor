@@ -5,8 +5,15 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"regexp"
 	"testing"
 )
+
+func removeResponseTime(input string) string {
+	// Define a regular expression that matches ", Average Response Time: XX.XXms"
+	re := regexp.MustCompile(`, Average Response Time: \d+(\.\d+)?(ms|s)`)
+	return re.ReplaceAllString(input, "")
+}
 
 func TestPCAPFiles(t *testing.T) {
 	tests := []struct {
@@ -86,9 +93,13 @@ func TestPCAPFiles(t *testing.T) {
 				t.Fatalf("failed to read expected output file: %s", err)
 			}
 
+			// Remove Average Response Time from both outputs
+			capturedOutputWithoutResponseTime := removeResponseTime(string(capturedOutput))
+			expectedOutputWithoutResponceTime := removeResponseTime(string(expectedOutput))
+
 			// Compare outputs
-			if string(capturedOutput) != string(expectedOutput) {
-				t.Errorf("output does not match expected\nExpected:\n%s\nGot:\n%s", string(expectedOutput), string(capturedOutput))
+			if capturedOutputWithoutResponseTime != expectedOutputWithoutResponceTime {
+				t.Errorf("output does not match expected\nExpected:\n%s\nGot:\n%s", expectedOutputWithoutResponceTime, capturedOutputWithoutResponseTime)
 			}
 		})
 	}

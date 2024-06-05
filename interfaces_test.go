@@ -132,9 +132,13 @@ func TestInterfaces(t *testing.T) {
 			capturedOutputWithoutTimestamps := removeTimestamps(string(capturedOutput))
 			expectedOutputWithoutTimestamps := removeTimestamps(string(expectedOutput))
 
+			// Remove Average Response Time from both outputs
+			capturedOutputWithoutResponseTime := removeResponseTime(string(capturedOutputWithoutTimestamps))
+			expectedOutputWithoutResponceTime := removeResponseTime(string(expectedOutputWithoutTimestamps))
+
 			// Compare outputs
-			if capturedOutputWithoutTimestamps != expectedOutputWithoutTimestamps {
-				t.Errorf("output does not match expected\nExpected:\n%s\nGot:\n%s", expectedOutputWithoutTimestamps, capturedOutputWithoutTimestamps)
+			if capturedOutputWithoutResponseTime != expectedOutputWithoutResponceTime {
+				t.Errorf("output does not match expected\nExpected:\n%s\nGot:\n%s", expectedOutputWithoutResponceTime, capturedOutputWithoutResponseTime)
 			}
 		})
 	}
