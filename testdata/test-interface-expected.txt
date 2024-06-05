@@ -1,0 +1,7 @@
+[2024-06-05 08:03:51] Request URL: http://example.com/
+[2024-06-05 08:03:51] GET / HTTP/1.1
+[2024-06-05 08:03:51] HTTP/1.1 200 OK
+[2024-06-05 08:03:53] Request URL: http://example.com/
+[2024-06-05 08:03:53] GET / HTTP/1.1
+[2024-06-05 08:03:53] HTTP/1.1 200 OK
+[2024-06-05 08:03:56] URL: http://example.com/, Requests: 2, Average Response Time: 0s

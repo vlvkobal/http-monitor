@@ -60,5 +60,5 @@ curl --http1.1 httpbin.org/status/204
 ### Example of Recording a Test File
 
 ```sh
-sudo tcpdump -i eth0 -n host example.com -w test.pcap
+sudo tcpdump port 80 -n -i eth0 -w test.pcap
 ```
