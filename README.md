@@ -47,14 +47,13 @@ go test -v
 
 ### Running End to End Tests for Interfaces
 
-The end-to-end tests for interfaces use virtual network interfaces and tcpreplay to replay pcap files. These tests are optional and require tcpreplay to be installed and the ability to run sudo commands.
+The end-to-end tests for interfaces use virtual network interfaces and `tcpreplay` to replay pcap files. These tests are optional and require `tcpreplay` to be installed and the ability to run `sudo` commands.
 
 To run these tests:
-
-1. Ensure tcpreplay is installed.
-2. Ensure you can run sudo commands.
-3. ⚠️ **Warning**: The tests will automatically create and then destroy the virtual interfaces `veth0` and `veth1`.
-4. Use the following command to run the tests with the interfaces build tag:
+1. Ensure `tcpreplay` is installed.
+2. Ensure you can run `sudo` commands.
+3. ⚠️ **Warning**: The tests will automatically create and then destroy the virtual interfaces `veth0` and `veth1`. If anything goes wrong you can tear interfaces down using `sudo scripts/teardown_interfaces.sh`.
+4. Use the following command to run the tests with the `interfaces` build tag:
 
 ```sh
 go test -v -tags=interfaces
