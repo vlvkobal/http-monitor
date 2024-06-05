@@ -33,12 +33,20 @@ var (
 	lastPcapPacket = make(chan gopacket.Packet, 1)
 	requests       = make(map[string]int)
 	responseTimes  = make(map[string][]time.Duration)
-	tcpMap         = make(map[string]tcpConnection)
+	tcpMap         = make(map[PacketKey]tcpConnection)
 	filePtr        *string
 	summaryPtr     *bool
 	statsMessages  []string
 	done           = make(chan bool)
 )
+
+type PacketKey struct {
+	SrcIP   gopacket.Endpoint
+	DstIP   gopacket.Endpoint
+	SrcPort layers.TCPPort
+	DstPort layers.TCPPort
+	Seq     uint32
+}
 
 type tcpConnection struct {
 	url       string
@@ -180,7 +188,13 @@ func processPacket(packet gopacket.Packet) {
 					return
 				}
 				url = "http://" + host + fields[1] // Add protocol for clarity
-				key := fmt.Sprintf("%s:%s:%d:%d:%d", srcIP, dstIP, tcp.SrcPort, tcp.DstPort, tcp.Seq)
+				key := PacketKey{
+					SrcIP:   srcIP,
+					DstIP:   dstIP,
+					SrcPort: tcp.SrcPort,
+					DstPort: tcp.DstPort,
+					Seq:     tcp.Seq,
+				}
 				mu.Lock()
 				requests[url]++
 				tcpMap[key] = tcpConnection{url, timestamp}
@@ -194,7 +208,13 @@ func processPacket(packet gopacket.Packet) {
 					fmt.Println("Invalid HTTP response status line")
 					return
 				}
-				key := fmt.Sprintf("%s:%s:%d:%d:%d", dstIP, srcIP, tcp.DstPort, tcp.SrcPort, tcp.Ack-1)
+				key := PacketKey{
+					SrcIP:   dstIP,
+					DstIP:   srcIP,
+					SrcPort: tcp.DstPort,
+					DstPort: tcp.SrcPort,
+					Seq:     tcp.Ack - 1,
+				}
 				mu.Lock()
 				if conn, exists := tcpMap[key]; exists {
 					responseTimes[conn.url] = append(responseTimes[conn.url], timestamp.Sub(conn.timestamp))
